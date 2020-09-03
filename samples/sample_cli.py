@@ -187,7 +187,7 @@ class Sedcfg(object):
             print("Please enter your input to either enable or disable Tls on the drive")
             return False
 
-    def device_identification(self):
+    def device_identification(self,args=None):
         '''
         The function to perform device identity attestation by validating the device certificate and digital signature
         Uses Tpersign method to sign an input string to return the signature.
@@ -195,10 +195,6 @@ class Sedcfg(object):
         Succeeds if a drive is Seagate specific,fails otherwise
 
         '''
-        self.sed.fipsCompliance = self.sed.fipsCompliance()
-        if self.sed.fipsCompliance != None:
-            print("Drive being tested is a FIPS drive, device identification not supported")
-            return
 
         # Pull the drive certificate
         self.logger.debug('Obtaining Drive certificate')
@@ -216,7 +212,7 @@ class Sedcfg(object):
             print("Device identification successfull, drive being tested is a Seagate drive")
         else:
             print("Drive being tested is not a Seagate drive")
-        return
+        return True
 
     def take_ownership(self, args=None):
         '''
@@ -605,6 +601,8 @@ class argParser(object):
 
         main.add_argument('device', help='Specific wwn or device names of drives to operate on')
         subparser = main.add_subparsers(title='subcommand')
+        deviceid = subparser.add_parser('identify', help='Perform Device identification')
+        deviceid.set_defaults(operation=Sedcfg.device_identification)
         enableTls = subparser.add_parser('Tls', help='EnableTls on the Drive')
         enableTls.add_argument('enabledisable', help='enable or disable Tls communication')
         enableTls.set_defaults(operation=Sedcfg.TlsOperation)
@@ -649,7 +647,7 @@ def main(args=None):
     if sedcfg.sed.SSC != 'Enterprise' and sedcfg.sed.SSC != 'Opalv2':
         print("Unable to retrieve SED functionality of the device. Enable OS to allow secure commands ")
         return 1
-    sedcfg.device_identification()
+    #sedcfg.device_identification()
     rv = drive_namespace.operation(sedcfg, drive_namespace)
     if rv is not True:
         print("Operation failed")
