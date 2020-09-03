@@ -53,27 +53,30 @@ class VerifyIdentity(object):
         textchars = bytearray({7,8,9,10,12,13,27} | set(range(0x20, 0x100)) - {0x7f})
         is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))  
         driveCert_PEM = DER_cert_to_PEM_cert(bytes(self.drive_cert))
-        with open('data.txt', 'w') as f:
+        with open('drive_cert.pem', 'w') as f:
             f.write(driveCert_PEM)
         
         # Search for and Process the M_TDCI Certificate
         m_tdci_cert_filename = self.find_certificate_parent(self.drive_cert)
         m_tdci_cert_binary = self.read_der_cert(m_tdci_cert_filename)
         m_tdci_cert_PEM = DER_cert_to_PEM_cert(bytes(m_tdci_cert_binary)) if is_binary_string(m_tdci_cert_binary) else bytes(m_tdci_cert_binary)
-        with open('data_mtdci.txt', 'w') as f:
+        print('Finding parent of drive certificate-Level 2 certificate')
+        with open('level2_cert.pem', 'w') as f:
             f.write(m_tdci_cert_PEM)
         
         # Search for and Process the CTDCI Certificate
         c_tdci_cert_filename = self.find_certificate_parent(m_tdci_cert_binary)
         c_tdci_cert_binary = self.read_der_cert(c_tdci_cert_filename)
         c_tdci_cert_PEM = DER_cert_to_PEM_cert(bytes(c_tdci_cert_binary)) if is_binary_string(c_tdci_cert_binary) else bytes(c_tdci_cert_binary)
-        with open('data_ctdci.txt', 'w') as f:
+        print('Finding parent of Level 2 certificate-Level 1 certificate')
+        with open('level1_cert.pem', 'w') as f:
             f.write(c_tdci_cert_PEM)
 
         url_data = urllib.request.urlopen("http://drivetrust.seagate.com/cert/DTRoot.cer")
         root_cert_binary = url_data.read()
         root_cert_PEM = DER_cert_to_PEM_cert(bytes(root_cert_binary))
-        with open('data_root.txt', 'w') as f:
+        print('Finding Seagate root certificate')
+        with open('root_cert.pem', 'w') as f:
             f.write(root_cert_PEM)
 
         trusted_certs = (m_tdci_cert_PEM, c_tdci_cert_PEM, root_cert_PEM)

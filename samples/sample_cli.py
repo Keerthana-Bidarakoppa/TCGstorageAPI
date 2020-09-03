@@ -198,13 +198,16 @@ class Sedcfg(object):
 
         # Pull the drive certificate
         self.logger.debug('Obtaining Drive certificate')
+        print('Obtaining certificate from the drive')
         device_cert = self.sed.get_tperSign_cert()
         # Validate the drive_certificate against the root certificate
+        print('Validate drive certificate against the Seagate Parent certificates')
         identity = verifyidentity.VerifyIdentity(device_cert)
         identity.validate_drive_cert()
         # Send a string to obtain the device signature
         string = str(datetime.datetime.today())
         self.logger.debug('Performing digital signing operation')
+        print('Performing digital signing operation')
         signature = self.sed.tperSign(bytes(string,encoding='utf8'))
         # Validate drive signature
         verify = identity.validate_signature(string, signature)
